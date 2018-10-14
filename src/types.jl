@@ -1,8 +1,8 @@
-abstract TradingStructures
+abstract type TradingStructures end
 ### TODO (later) use a suitable Blotter/FinancialSeries abstract type
 
 "Order type"
-type Order <: TradingStructures
+struct Order <: TradingStructures
   id::String # unique order id for submission/tracking
   quantity::Int64 # abs. value of position change targeted
   price::Float64 # limit price, set to NaN for market order
@@ -46,11 +46,11 @@ function getorderposchg(orde::Order)
   error("Unknown order side")
 end
 
-typealias Blotter @compat Dict{DateTime,Tuple{Int64,Float64}}
+const Blotter = @compat Dict{DateTime,Tuple{Int64,Float64}}
 
-typealias Targ @compat Tuple{Int64,Vector{Float64}}
+const Targ = @compat Tuple{Int64,Vector{Float64}}
 
-typealias OHLC @compat Tuple{DateTime,Vector{Float64}}
+const OHLC = @compat Tuple{DateTime,Vector{Float64}}
 
 """
 Initialize empty blotter as an associative collection

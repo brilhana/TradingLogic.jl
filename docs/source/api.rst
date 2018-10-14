@@ -501,7 +501,7 @@ fileout::Union{AbstractString, Void}, dtformat\_out)
 
 --------------
 
- #### schange{T}(s\_inp::Reactive.Signal{T}) `¶ <#method__schange.1>`__
+ #### schange(s\_inp::Reactive.Signal{T}) where {T} = T `¶ <#method__schange.1>`__
 Bool change signal, true when input signal changes
 
 *source:*

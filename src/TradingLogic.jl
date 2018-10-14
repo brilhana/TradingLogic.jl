@@ -1,10 +1,8 @@
 __precompile__(true)
 
-using Base.Dates, Reactive, Match, TimeSeries, Compat
+using Dates, Reactive, Match, TimeSeries, Compat
 
 module TradingLogic
-
-using Base.Dates, Reactive, Match, TimeSeries, Compat
 
 export runtrading!, runbacktest, runbacktesttarg
 export emptyblotter, printblotter, writeblotter

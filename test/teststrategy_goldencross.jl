@@ -1,46 +1,46 @@
-facts("Goldencross trading logic") do
-  context("Market state") do
+@testset "Goldencross trading logic"
+  @testset "Market state"
     fm = TradingLogic.goldencrossmktstate
-    @fact fm(120.0, 50.0) --> :trendup
-    @fact fm(20.0, 50.0) --> :trenddown
-    @fact fm(20.0, 20.0) --> :undefined
-    @fact fm(NaN, 20.0) --> :undefined
-    @fact fm(20.0, NaN) --> :undefined
-    @fact fm(NaN, NaN) --> :undefined
+    @test fm(120.0, 50.0) == :trendup
+    @test fm(20.0, 50.0) == :trenddown
+    @test fm(20.0, 20.0) == :undefined
+    @test fm(NaN, 20.0) == :undefined
+    @test fm(20.0, NaN) == :undefined
+    @test fm(NaN, NaN) == :undefined
   end
-  context("Target position") do
+  @testset "Target position"
     tq = 100
     ft(mkt, posnow) = TradingLogic.goldencrossposlogic(
       mkt, tq, [posnow])
     stlim = Array(Float64, 0)
 
     # up, zero position
-    @fact ft(:trendup, 0) --> (tq, stlim)
+    @test ft(:trendup, 0) == (tq, stlim)
     # up, position less than target (e.g. partial fill)
     p = round(Int64, tq/2)
-    @fact ft(:trendup, p) --> (tq - p, stlim)
+    @test ft(:trendup, p) == (tq - p, stlim)
 
     # down: sell
-    @fact ft(:trenddown, tq) --> (-tq, stlim)
-    @fact ft(:trenddown, p) --> (-p, stlim)
+    @test ft(:trenddown, tq) == (-tq, stlim)
+    @test ft(:trenddown, p) == (-p, stlim)
     # down: nothing left to sell
-    @fact ft(:trenddown, 0) --> (0, stlim)
+    @test ft(:trenddown, 0) == (0, stlim)
 
     # hold position in line with the market state
-    @fact ft(:trendup, tq) --> (0, stlim)
+    @test ft(:trendup, tq) == (0, stlim)
 
     # undefined: wait
-    @fact ft(:undefined, tq) --> (0, stlim)
+    @test ft(:undefined, tq) == (0, stlim)
 
     # negative position: should not happen, close it
-    @fact ft(:trendup, -5) --> (5, stlim)
-    @fact ft(:trenddown, -5) --> (5, stlim)
-    @fact ft(:undefined, -5) --> (5, stlim)
+    @test ft(:trendup, -5) == (5, stlim)
+    @test ft(:trenddown, -5) == (5, stlim)
+    @test ft(:undefined, -5) == (5, stlim)
   end
 end
 
-facts("Goldencross strategy backtesting") do
-  context("Boeing stock over 50 years vs. quantstrat") do
+@testset "Goldencross strategy backtesting"
+  @testset "Boeing stock over 50 years vs. quantstrat"
     # quantstrat input: OHLC data
     ohlc_BA = TimeSeries.readtimearray(
       rel("quantstrat/goldencross/data/OHLC_BA_2.csv"))
@@ -104,7 +104,7 @@ facts("Goldencross strategy backtesting") do
       #println(s_perf.value)
     end
     # no errors
-    @fact s_status.value[1] --> true
+    @test s_status.value[1] == true
 
     #TradingLogic.printblotter(STDOUT, blotter)
     metr = [:DDown]
@@ -113,13 +113,13 @@ facts("Goldencross strategy backtesting") do
     #println(perfm[:PnL])
 
     # transaction matching
-    @fact length(perfm[:Qty]) --> length(txnsdf[:datestr])
-    @fact Date(vt) --> vdate
-    @fact perfm[:Qty] --> vqty
-    @fact perfm[:FillPrice] --> roughly(vprc)
+    @test length(perfm[:Qty]) == length(txnsdf[:datestr])
+    @test Date(vt) == vdate
+    @test perfm[:Qty] == vqty
+    @test perfm[:FillPrice] == roughly(vprc)
 
     # profit loss over time
-    @fact perfm[:PnL] --> roughly(vpnlcum)
+    @test perfm[:PnL] == roughly(vpnlcum)
     #println(perfm)
 
     # quantstrat/goldencross/results_summary.txt
@@ -127,18 +127,18 @@ facts("Goldencross strategy backtesting") do
     ddownmax = 17374.0 # Max.Drawdown
 
     # not final PnL without exit yet
-    @fact TradingLogic.tradepnlfinal(blotter) - pnlnet > 10.0 --> true
+    @test TradingLogic.tradepnlfinal(blotter) - pnlnet > 10.0 == true
     # but final PnL if exit price is given: last timestep close price
     pfinal = s_ohlc.value[2][ohlc_inds[:close]]
-    @fact TradingLogic.tradepnlfinal(blotter, pfinal) --> roughly(pnlnet)
+    @test TradingLogic.tradepnlfinal(blotter, pfinal) == roughly(pnlnet)
 
     # add exit to blotter for cumulative statistics at the end date
     blotter[DateTime(date_final)] = (-sum(perfm[:Qty]), pfinal)
 
-    @fact TradingLogic.tradepnlfinal(blotter) --> roughly(pnlnet)
+    @test TradingLogic.tradepnlfinal(blotter) == roughly(pnlnet)
     # perfm[:DDown] does not have the true max. drawdown
     # as it is only blotter timesteps based;
     # use performance metrics signal for that
-    @fact s_perf.value[2] --> roughly(ddownmax)
+    @test s_perf.value[2] == roughly(ddownmax)
   end
 end

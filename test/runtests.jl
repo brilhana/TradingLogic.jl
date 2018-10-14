@@ -1,7 +1,6 @@
-using FactCheck
 using MarketData
 using DataFrames
-using Base.Dates
+using Dates
 using Compat
 
 include("signals.jl")

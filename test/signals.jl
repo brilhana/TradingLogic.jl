@@ -1,18 +1,18 @@
 using TradingLogic
 using Reactive
 
-facts("Working with signals") do
-  context("Change detection") do
+@testset "Working with signals"
+  @testset "Change detection"
     s_inp = Reactive.Signal(5)
     s_chg = TradingLogic.schange(s_inp)
     push!(s_inp, 5)
-    @fact s_chg.value --> false
+    @test s_chg.value == false
     push!(s_inp, 8)
-    @fact s_chg.value --> true
+    @test s_chg.value == true
     push!(s_inp, 8)
-    @fact s_chg.value --> false
+    @test s_chg.value == false
   end
-  context("Buffering signal history and SMA calculation") do
+  @testset "Buffering signal history and SMA calculation"
     # simple vector test case
     nsma = 10
     vval = rand(100)
@@ -30,7 +30,7 @@ facts("Working with signals") do
       push!(s_inp, vval[i])
       vsma_sig[i] = s_sma.value
     end
-    @fact all(isnan(vsma_sig[1:9])) --> true
-    @fact vsma_sig[10:100] --> roughly(vsma[10:100])
+    @test all(isnan(vsma_sig[1:9])) == true
+    @test vsma_sig[10:100] == roughly(vsma[10:100])
   end
 end

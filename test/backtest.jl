@@ -1,6 +1,6 @@
 rel(path::AbstractString) = joinpath(splitdir(@__FILE__)[1], path)
 
-facts("OHLC backtest with timearray input") do
+@testset "OHLC backtest with timearray input"
   # using quantstrat goldencross test
   #  details in teststrategy_goldencross.jl
   ohlc_BA = TimeSeries.readtimearray(
@@ -20,13 +20,13 @@ facts("OHLC backtest with timearray input") do
   position_initial = 0
   pfill = :open
 
-  context("Final performance and transactions blotter") do
+  @testset "Final performance and transactions blotter"
     pnlfin, ddownmax, blotter = TradingLogic.runbacktest(
       ohlc_ta, ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
     #TradingLogic.printblotter(STDOUT, blotter)
-    @fact pnlfin --> roughly(pnlnet_ref)
-    @fact ddownmax --> roughly(ddownmax_ref)
+    @test pnlfin == roughly(pnlnet_ref)
+    @test ddownmax == roughly(ddownmax_ref)
 
     # quantstrat output: transactions
     txnsdf = DataFrames.readtable(
@@ -51,13 +51,13 @@ facts("OHLC backtest with timearray input") do
 
     # verify blotter: transaction matching
     vt, perfm = TradingLogic.tradeperf(blotter, [:DDown])
-    @fact length(perfm[:Qty]) --> length(txnsdf[:datestr])
-    @fact Date(vt) --> vdate
-    @fact perfm[:Qty] --> vqty
-    @fact perfm[:FillPrice] --> roughly(vprc)
+    @test length(perfm[:Qty]) == length(txnsdf[:datestr])
+    @test Date(vt) == vdate
+    @test perfm[:Qty] == vqty
+    @test perfm[:FillPrice] == roughly(vprc)
   end
 
-  context("Output file content") do
+  @testset "Output file content"
     fileout = rel("backtest_out.csv")
     dtformat_out = "yyyy-mm-ddTHH:MM:SS"
 
@@ -65,32 +65,32 @@ facts("OHLC backtest with timearray input") do
       ohlc_ta, ohlc_inds, fileout, dtformat_out,
       pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
-    @fact pnlfin --> roughly(pnlnet_ref)
-    @fact ddownmax --> roughly(ddownmax_ref)
+    @test pnlfin == roughly(pnlnet_ref)
+    @test ddownmax == roughly(ddownmax_ref)
 
     # output file as timearray
     taf = TimeSeries.readtimearray(fileout,
                                    format=dtformat_out)
     run(`rm $fileout`)
-    @fact length(taf) --> length(ohlc_ta)
-    @fact taf.timestamp --> ohlc_ta.timestamp
-    @fact taf.colnames --> [ohlc_ta.colnames; "CumPnL"; "DDown"]
-    @fact taf.values[:,1:end-2] --> roughly(ohlc_ta.values)
-    @fact taf["CumPnL"].values[1] --> roughly(0.0)
-    @fact taf["DDown"].values[1] --> roughly(0.0)
-    @fact maximum(abs(taf["DDown"].values)) --> roughly(ddownmax_ref)
+    @test length(taf) == length(ohlc_ta)
+    @test taf.timestamp == ohlc_ta.timestamp
+    @test taf.colnames == [ohlc_ta.colnames; "CumPnL"; "DDown"]
+    @test taf.values[:,1:end-2] == roughly(ohlc_ta.values)
+    @test taf["CumPnL"].values[1] == roughly(0.0)
+    @test taf["DDown"].values[1] == roughly(0.0)
+    @test maximum(abs(taf["DDown"].values)) == roughly(ddownmax_ref)
   end
 
-  context("Latest timestep position and targets") do
+  @testset "Latest timestep position and targets"
     # final step: non-zero position, no changes targeted
     itfin = findfirst(ohlc_ta.timestamp .== Dates.Date(1967,02,23))
     blotter, posact, targ = TradingLogic.runbacktesttarg(
       ohlc_ta[1:itfin], ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
     #TradingLogic.printblotter(STDOUT, blotter)
-    @fact length(blotter) --> 3
-    @fact posact --> 100
-    @fact targ[1] --> 0
+    @test length(blotter) == 3
+    @test posact == 100
+    @test targ[1] == 0
 
     # final step: non-zero position, exit targeted
     # if continued, exit transaction fills on 1967-10-27
@@ -99,9 +99,9 @@ facts("OHLC backtest with timearray input") do
       ohlc_ta[1:itfin], ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
     #TradingLogic.printblotter(STDOUT, blotter)
-    @fact length(blotter) --> 3
-    @fact posact --> 100
-    @fact targ[1] --> -100
+    @test length(blotter) == 3
+    @test posact == 100
+    @test targ[1] == -100
     # if continued, exit transaction fills on 1967-10-27:
     # verify that, i.e. no double-action next step
     #  to be consistent with orderhandling!
@@ -109,14 +109,14 @@ facts("OHLC backtest with timearray input") do
     blotter, posact, targ = TradingLogic.runbacktesttarg(
       ohlc_ta[1:itfin+1], ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
-    @fact posnew --> posact
-    @fact targ[1] --> 0 # otherwise double position change happens at this step
+    @test posnew == posact
+    @test targ[1] == 0 # otherwise double position change happens at this step
     posnew = posact + targ[1]
     blotter, posact, targ = TradingLogic.runbacktesttarg(
       ohlc_ta[1:itfin+2], ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
-    @fact posnew --> posact
-    @fact targ[1] --> 0
+    @test posnew == posact
+    @test targ[1] == 0
 
     # final step: zero position, no changes targeted
     itfin = findfirst(ohlc_ta.timestamp .== Dates.Date(1967,10,30))
@@ -124,8 +124,8 @@ facts("OHLC backtest with timearray input") do
       ohlc_ta[1:itfin], ohlc_inds, nothing, "", pfill, position_initial,
       targetfun, targetqty, mafast, maslow)
     #TradingLogic.printblotter(STDOUT, blotter)
-    @fact length(blotter) --> 4
-    @fact posact --> 0
-    @fact targ[1] --> 0
+    @test length(blotter) == 4
+    @test posact == 0
+    @test targ[1] == 0
   end
 end

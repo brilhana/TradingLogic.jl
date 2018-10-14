@@ -13,7 +13,7 @@ function fsigchange(prev, x)
 end
 
 "Bool change signal, true when input signal changes"
-function schange{T}(s_inp::Signal{T})
+function schange(s_inp::Signal{T}) where T
   return map(s -> s[1],
              foldp(fsigchange, (false, s_inp.value), s_inp),
              typ = Bool)

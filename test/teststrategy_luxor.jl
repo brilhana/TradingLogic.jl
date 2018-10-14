@@ -1,54 +1,54 @@
-facts("Luxor trading logic") do
-  context("Market state") do
+@testset "Luxor trading logic"
+  @testset "Market state"
     fm = TradingLogic.luxormktstate
-    @fact fm(120.0, 50.0) --> :trendup
-    @fact fm(20.0, 50.0) --> :trenddown
-    @fact fm(20.0, 20.0) --> :undefined
-    @fact fm(NaN, 20.0) --> :undefined
-    @fact fm(20.0, NaN) --> :undefined
-    @fact fm(NaN, NaN) --> :undefined
+    @test fm(120.0, 50.0) == :trendup
+    @test fm(20.0, 50.0) == :trenddown
+    @test fm(20.0, 20.0) == :undefined
+    @test fm(NaN, 20.0) == :undefined
+    @test fm(20.0, NaN) == :undefined
+    @test fm(NaN, NaN) == :undefined
   end
-  context("Target position") do
+  @testset "Target position"
     tq = 100
     ft(mkt, posnow) = TradingLogic.luxorposlogic(
       mkt, 155.0, 150.0, 10.0, tq, [posnow])
     stlim = Array(Float64, 0)
 
     # enter long
-    @fact ft(:trendup, 0) --> (tq, [165.0, 155.0])
+    @test ft(:trendup, 0) == (tq, [165.0, 155.0])
     # enter long partial fill
     p = round(Int64, tq/2)
-    @fact ft(:trendup, p) --> (tq - p, [165.0, 155.0])
+    @test ft(:trendup, p) == (tq - p, [165.0, 155.0])
 
     # enter short
-    @fact ft(:trenddown, 0) --> (-tq, [140.0, 150.0])
+    @test ft(:trenddown, 0) == (-tq, [140.0, 150.0])
     # enter short partial fill
     p = -round(Int64, tq/2)
-    @fact ft(:trenddown, p) --> (-abs(tq-p), [140.0, 150.0])
+    @test ft(:trenddown, p) == (-abs(tq-p), [140.0, 150.0])
 
     # hold position in line with the market state
-    @fact ft(:trendup, tq) --> (0, stlim)
-    @fact ft(:trenddown, -tq) --> (0, stlim)
+    @test ft(:trendup, tq) == (0, stlim)
+    @test ft(:trenddown, -tq) == (0, stlim)
 
     # exit long position
-    @fact ft(:trenddown, tq) --> (-tq, stlim)
+    @test ft(:trenddown, tq) == (-tq, stlim)
     p = round(Int64, tq/2)
-    @fact ft(:trenddown, p) --> (-p, stlim)
+    @test ft(:trenddown, p) == (-p, stlim)
 
     # exit short position
-    @fact ft(:trendup, -tq) --> (tq, stlim)
+    @test ft(:trendup, -tq) == (tq, stlim)
     p = -round(Int64, tq/2)
-    @fact ft(:trendup, p) --> (abs(p), stlim)
+    @test ft(:trendup, p) == (abs(p), stlim)
 
     # undefined: wait
-    @fact ft(:undefined, 0) --> (0, stlim)
-    @fact ft(:undefined, -tq) --> (0, stlim)
-    @fact ft(:undefined, tq) --> (0, stlim)
+    @test ft(:undefined, 0) == (0, stlim)
+    @test ft(:undefined, -tq) == (0, stlim)
+    @test ft(:undefined, tq) == (0, stlim)
   end
 end
 
-facts("Luxor strategy backtesting") do
-  context("GBPUSD vs. quantstrat") do
+@testset "Luxor strategy backtesting"
+  @testset "GBPUSD vs. quantstrat"
     mafast = 10
     maslow = 40
     targetqty = 100
@@ -88,6 +88,6 @@ facts("Luxor strategy backtesting") do
     println(perfm)
 
     ### TODO
-    @pending 0 --> 1
+    @pending 0 == 1
   end
 end

@@ -506,7 +506,7 @@ Core of the backtest run.
 ---
 
 <a id="method__schange.1" class="lexicon_definition"></a>
-#### schange{T}(s_inp::Reactive.Signal{T}) [¶](#method__schange.1)
+#### schange(s_inp::Reactive.Signal{T}) where {T} = T [¶](#method__schange.1)
 Bool change signal, true when input signal changes
 
 *source:*
