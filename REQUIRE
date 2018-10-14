@@ -1,6 +1,6 @@
-julia 0.4
+julia 0.7
+Compat
+MarketData
 Match
 Reactive
 TimeSeries
-Compat
-
